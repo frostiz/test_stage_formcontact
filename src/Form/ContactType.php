@@ -4,8 +4,10 @@ namespace App\Form;
 
 use App\Entity\Department;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use PhpParser\Node\Expr\Array_;
 use function PHPSTORM_META\type;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\ChoiceList\Loader\CallbackChoiceLoader;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -24,29 +26,19 @@ class ContactType extends AbstractType
         $this->entityManager = $entityManager;
     }
 
-    private function getChoices()
-    {
-        $choices = $this->entityManager->getRepository(Department::class)->findAll();
-        return $choices;
-    }
-
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $choices = $this->getChoices();
         $builder
             ->add('from', TextType::class, [
                 'label' => 'From:',
                 'attr' => ['placeholder' => 'Enter your name']
             ])
-            ->add('to', ChoiceType::class, [
-                'choices' => $choices,
-                'choice_value' => function(Department $entity = null) {
-                    return $entity ? $entity->getId() : '';
-                },
-                'choice_label' => function(Department $entity = null) {
-                    return $entity ? $entity->getName() : '';
-                },
-                'label' => 'To department:'
+            ->add('department', EntityType::class, [
+                'class' => Department::class,
+                'label' => 'Department: ',
+                'choice_label' => function($category) {
+                    return $category->getName();
+                }
             ])
             ->add('subject', TextType::class, [
                 'label' => 'Email subject:',
